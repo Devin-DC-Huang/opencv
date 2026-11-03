@@ -11,6 +11,10 @@
 //
 // Both runs below use the SAME importer (the classic one); only the back-end
 // differs, so a mismatch cannot be blamed on a different model parser.
+//
+// Each back-end is run twice: the FIRST forward() also pays the one-off
+// initialisation (for CANN that is the GE graph -> OM compile, tens of
+// seconds), the SECOND one is pure inference.
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/utils/logger.hpp>
@@ -21,12 +25,14 @@
 #include <cmath>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 static const int ENGINE_CLASSIC_POAC = 3;
 
 struct Result
 {
-    double ms = 0;
+    double first_ms = 0;
+    double second_ms = 0;
     int top1 = -1;
     double score = 0;
     cv::Mat out;
@@ -75,17 +81,27 @@ static Result run(const std::string& model, int backend, int target, const char*
     cv::Mat out = net.forward();
     auto t1 = std::chrono::steady_clock::now();
 
+    auto t2 = std::chrono::steady_clock::now();
+    cv::Mat out2 = net.forward();
+    auto t3 = std::chrono::steady_clock::now();
+
     Result r;
-    r.ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    r.first_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    r.second_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
     r.out = out;
     top1Of(out, r.top1, r.score);
 
-    printf("RESULT[%s] ms=%.2f top1=%d score=%.6f out=%dx%dx%dx%d\n",
-           tag, r.ms, r.top1, r.score,
+    double diff = -1;
+    if (out.size == out2.size && out.type() == out2.type())
+        diff = cv::norm(out, out2, cv::NORM_INF);
+
+    printf("RESULT[%s] first_ms=%.2f second_ms=%.2f top1=%d score=%.6f out=%dx%dx%dx%d rerun_diff=%.3g\n",
+           tag, r.first_ms, r.second_ms, r.top1, r.score,
            out.dims > 0 ? out.size[0] : 0,
            out.dims > 1 ? out.size[1] : 0,
            out.dims > 2 ? out.size[2] : 0,
-           out.dims > 3 ? out.size[3] : 0);
+           out.dims > 3 ? out.size[3] : 0,
+           diff);
     fflush(stdout);
     return r;
 }
@@ -106,8 +122,11 @@ int main(int argc, char** argv)
     if (!cpu.out.empty() && !npu.out.empty() && cpu.out.size == npu.out.size && cpu.out.type() == npu.out.type())
         maxdiff = cv::norm(cpu.out, npu.out, cv::NORM_INF);
 
-    printf("SUMMARY cpu_ms=%.2f cann_ms=%.2f cpu_top1=%d cann_top1=%d score_delta=%.6f max_abs_diff=%.6g\n",
-           cpu.ms, npu.ms, cpu.top1, npu.top1, std::fabs(cpu.score - npu.score), maxdiff);
+    printf("SUMMARY cpu_first_ms=%.2f cpu_second_ms=%.2f cann_first_ms=%.2f cann_second_ms=%.2f "
+           "cpu_top1=%d cann_top1=%d score_delta=%.6f max_abs_diff=%.6g speedup_second=%.2fx\n",
+           cpu.first_ms, cpu.second_ms, npu.first_ms, npu.second_ms,
+           cpu.top1, npu.top1, std::fabs(cpu.score - npu.score), maxdiff,
+           npu.second_ms > 0 ? cpu.second_ms / npu.second_ms : 0.0);
     fflush(stdout);
 
     const bool same = (cpu.top1 == npu.top1) && (std::fabs(cpu.score - npu.score) < 1e-3);
