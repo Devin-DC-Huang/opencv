@@ -688,14 +688,14 @@ public:
             auto shape_x = desc_x->GetShape().GetDims();
             CV_CheckGT(shape_x[axis], cnt_split, "DNN/CANN: invalid splits");
             size_splits[n_split - 1] = shape_x[axis] - cnt_split;
-            std::vector<int> shape_size_splits{(int)size_splits.size()};
+            MatShape shape_size_splits{(int)size_splits.size()};
             Mat size_splits_mat(shape_size_splits, CV_32S, size_splits.data());
             auto op_const_size_splits = std::make_shared<CannConstOp>(size_splits_mat.data, size_splits_mat.type(), shape_size_splits, cv::format("%s_size_splits", name.c_str()));
             op->set_input_size_splits(*(op_const_size_splits->getOp()));
             op->update_input_desc_size_splits(*(op_const_size_splits->getTensorDesc()));
             // set inputs : split_dim
             Mat split_dim_mat(1, 1, CV_32S, Scalar(axis));
-            std::vector<int> split_dim_shape{1};
+            MatShape split_dim_shape{1};
             auto op_const_split_dim = std::make_shared<CannConstOp>(split_dim_mat.data, split_dim_mat.type(), split_dim_shape, cv::format("%s_split_dim", name.c_str()));
             op->set_input_split_dim(*(op_const_split_dim->getOp()));
             op->update_input_desc_split_dim(*(op_const_split_dim->getTensorDesc()));
@@ -736,7 +736,7 @@ public:
             else
                 steps.push_back(1); // put 1 by default
         }
-        std::vector<int> shape_{dims};
+        MatShape shape_{dims};
 
         // set inputs
         // set inputs : x

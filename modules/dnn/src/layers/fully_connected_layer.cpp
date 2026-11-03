@@ -752,7 +752,7 @@ public:
         op->update_input_desc_x1(*x1_desc);
         // set inputs : bias (bias)
         auto bias_mat = bias ? biasMat : Mat::zeros(1, weightsMat.size[0], weightsMat.type());
-        std::vector<int> bias_shape{weightsMat.size[0]};
+        MatShape bias_shape{weightsMat.size[0]};
         auto op_const_bias = std::make_shared<CannConstOp>(bias_mat.data, bias_mat.type(), bias_shape, cv::format("%s_b", name.c_str()));
         op->set_input_bias(*(op_const_bias->getOp()));
         op->update_input_desc_bias(*(op_const_bias->getTensorDesc()));

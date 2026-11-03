@@ -543,7 +543,7 @@ public:
         auto input_wrapper = inputs[0].dynamicCast<CannBackendWrapper>();
         auto input_desc = input_wrapper->getTensorDesc();
 
-        std::vector<int> axes_shape{(int)axes.size()};
+        MatShape axes_shape{(int)axes.size()};
         Mat axes_mat(axes_shape, CV_32S, &axes[0]);
         auto axes_node = std::make_shared<CannConstOp>(axes_mat.data, axes_mat.type(), axes_shape, cv::format("%s_axes", name.c_str()));
         auto axes_desc = axes_node->getTensorDesc();

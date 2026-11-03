@@ -391,7 +391,7 @@ public:
         auto x_desc = x->getTensorDesc();
         op->update_input_desc_x(*x_desc);
         // set inputs : scale (blobs[2])
-        std::vector<int> shape_{channel};
+        MatShape shape_{channel};
         auto op_const_scale = std::make_shared<CannConstOp>(blobs[2].data, blobs[2].type(), shape_, cv::format("%s_scale", name.c_str()));
         op->set_input_scale(*(op_const_scale->getOp()));
         op->update_input_desc_scale(*(op_const_scale->getTensorDesc()));

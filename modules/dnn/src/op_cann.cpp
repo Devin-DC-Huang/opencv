@@ -51,7 +51,7 @@ std::shared_ptr<AclEnvGuard> AclEnvGuard::GetAclEnv()
     return acl_env;
 }
 
-CannConstOp::CannConstOp(const uint8_t* data, const int dtype, const std::vector<int>& shape, const std::string& name)
+CannConstOp::CannConstOp(const uint8_t* data, const int dtype, const MatShape& shape, const std::string& name)
 {
     std::vector<int64_t> shape_{shape.begin(), shape.end()};
 

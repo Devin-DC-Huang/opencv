@@ -745,7 +745,7 @@ class MatMulLayerImpl CV_FINAL : public MatMulLayer {
                 if (beta != 1.f) { // BatchMatMulV2 adds the bias unscaled
                     Mat beta_mat(1, 1, CV_32F, Scalar(beta));
                     auto const_beta_node = std::make_shared<CannConstOp>(
-                        beta_mat.data, beta_mat.type(), std::vector<int>{1},
+                        beta_mat.data, beta_mat.type(), MatShape{1},
                         cv::format("%s_beta", name.c_str()));
                     auto mul = std::make_shared<ge::op::Mul>(
                         cv::format("%s_bias_beta", name.c_str()));
@@ -770,8 +770,8 @@ class MatMulLayerImpl CV_FINAL : public MatMulLayer {
                 auto bias_shape = shape(bias_mat);
 
                 // reshape if 1d
-                if (real_ndims_C == 1 && bias_shape.front() != 1) {
-                    bias_shape = std::vector<int>{bias_shape.front()};
+                if (real_ndims_C == 1 && bias_shape[0] != 1) {
+                    bias_shape = MatShape(1, bias_shape[0]);
                 }
 
                 auto const_bias_node = std::make_shared<CannConstOp>(bias_mat.data, bias_mat.type(), bias_shape, cv::format("%s_bias", name.c_str()));

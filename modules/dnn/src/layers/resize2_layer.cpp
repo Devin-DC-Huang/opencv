@@ -1422,7 +1422,7 @@ public:
             op->set_input_x_by_name(*op_x, x->name.c_str());
             op->update_input_desc_x(*x_desc);
             // set inputs : size
-            std::vector<int> shape_of_size_mat{2};
+            MatShape shape_of_size_mat{2};
             std::vector<int> size_vec{outHeight, outWidth};
             Mat size_mat(shape_of_size_mat, CV_32S, size_vec.data());
             auto op_const_size = std::make_shared<CannConstOp>(size_mat.data, size_mat.type(), shape_of_size_mat, cv::format("%s_size", name.c_str()));

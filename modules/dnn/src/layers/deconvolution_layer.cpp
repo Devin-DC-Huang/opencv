@@ -1140,7 +1140,7 @@ public:
             int out_channel = blobs[0].size[0];
             const Mat& mat_b = blobs[1];
 
-            std::vector<int> shape_b{out_channel};
+            MatShape shape_b{out_channel};
             auto op_const_b = std::make_shared<CannConstOp>(mat_b.data, mat_b.type(), shape_b, cv::format("%s_b", name.c_str()));
             op->set_input_bias(*(op_const_b->getOp()));
             op->update_input_desc_bias(*(op_const_b->getTensorDesc()));

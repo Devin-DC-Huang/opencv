@@ -714,7 +714,7 @@ public:
         auto shape_C = shape(mat_C);
         if (real_ndims_C == 1) {
             int dim = static_cast<int>(mat_C.total());
-            shape_C = std::vector<int>{dim};
+            shape_C = MatShape(1, dim);
         }
         auto op_const_C = std::make_shared<CannConstOp>(mat_C.data, mat_C.type(), shape_C, cv::format("%s_b", name.c_str()));
         op->set_input_bias(*(op_const_C->getOp()));

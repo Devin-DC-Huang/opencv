@@ -709,7 +709,7 @@ public:
             int out_channel = blobs[0].size[0];
             Mat b_mat({out_channel}, CV_32F, &biasvec[0]);
 
-            std::vector<int> bias_shape{out_channel};
+            MatShape bias_shape{out_channel};
             auto op_const_bias = std::make_shared<CannConstOp>(b_mat.data, b_mat.type(), bias_shape, cv::format("%s_b", name.c_str()));
             op->set_input_bias(*(op_const_bias->getOp()));
             op->update_input_desc_bias(*(op_const_bias->getTensorDesc()));

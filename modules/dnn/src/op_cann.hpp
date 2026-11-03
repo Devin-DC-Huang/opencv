@@ -78,7 +78,7 @@ CV__DNN_INLINE_NS_END
     class CannConstOp
     {
     public:
-        CannConstOp(const uint8_t* data, const int dtype, const std::vector<int>& shape, const std::string& name);
+        CannConstOp(const uint8_t* data, const int dtype, const MatShape& shape, const std::string& name);
         std::shared_ptr<ge::op::Const> getOp() { return op_; }
         std::shared_ptr<ge::TensorDesc> getTensorDesc() { return desc_; }
     private:

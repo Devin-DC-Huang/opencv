@@ -232,13 +232,13 @@ public:
             pads.push_back(paddings[i].first);
             pads.push_back(paddings[i].second);
         }
-        std::vector<int> pads_shape{(int)pads.size()};
+        MatShape pads_shape{(int)pads.size()};
         Mat paddings_mat(pads_shape, CV_32S, &pads[0]);
         auto op_const_paddings = std::make_shared<CannConstOp>(paddings_mat.data, paddings_mat.type(), pads_shape, cv::format("%s_paddings", name.c_str()));
         op->set_input_paddings(*(op_const_paddings->getOp()));
         op->update_input_desc_paddings(*(op_const_paddings->getTensorDesc()));
         // set inputs : constant_values
-        std::vector<int> constant_values_shape{1};
+        MatShape constant_values_shape{1};
         Mat constant_values_mat(1, 1, CV_32F, Scalar(paddingValue));
         auto op_const_constant_values = std::make_shared<CannConstOp>(constant_values_mat.data, constant_values_mat.type(), constant_values_shape, cv::format("%s_constant_values", name.c_str()));
         op->set_input_constant_values(*(op_const_constant_values->getOp()));

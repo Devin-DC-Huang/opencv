@@ -857,7 +857,7 @@ struct ReLU6Functor : public BaseFunctor
         op->update_input_desc_x(*x_desc);
 
         Mat min_value_mat(1, 1, CV_32F, Scalar(minValue));
-        std::vector<int> shape_{1};
+        MatShape shape_{1};
         auto op_const_minv = std::make_shared<CannConstOp>(min_value_mat.data, min_value_mat.type(), shape_, cv::format("%s_min_value", name.c_str()));
         op->set_input_clip_value_min(*(op_const_minv->getOp()));
         op->update_input_desc_clip_value_min(*(op_const_minv->getTensorDesc()));
@@ -3646,7 +3646,7 @@ struct ChannelsPReLUFunctor : public BaseFunctor
         op->set_input_x_by_name(*op_x, x->name.c_str());
         op->update_input_desc_x(*x_desc);
 
-        std::vector<int> shape_{scale.size[0]}; // scale should be a 1d of shape [n] tensor, and it is a 2d mat of shape [n, 1] in opencv
+        MatShape shape_{scale.size[0]}; // scale should be a 1d of shape [n] tensor, and it is a 2d mat of shape [n, 1] in opencv
         auto op_const_slope = std::make_shared<CannConstOp>(scale.data, scale.type(), shape_, cv::format("%s_weight", name.c_str()));
         op->set_input_weight(*(op_const_slope->getOp()));
         op->update_input_desc_weight(*(op_const_slope->getTensorDesc()));

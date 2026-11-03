@@ -399,7 +399,7 @@ public:
             auto input_desc = input_wrapper->getTensorDesc();
             op->update_input_desc_x(*input_desc);
             // set inputs : shape
-            std::vector<int> shape_of_shape{(int)newShapeDesc.size()};
+            MatShape shape_of_shape{(int)newShapeDesc.size()};
             Mat shape_mat(shape_of_shape, CV_32S, newShapeDesc.data());
             auto op_const_shape = std::make_shared<CannConstOp>(shape_mat.data, shape_mat.type(), shape_of_shape, cv::format("%s_shape", name.c_str()));
             op->set_input_shape(*(op_const_shape->getOp()));
