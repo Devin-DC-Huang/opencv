@@ -29,7 +29,25 @@ struct Result
     double ms = 0;
     int top1 = -1;
     double score = 0;
+    cv::Mat out;
 };
+
+// cv::dnn::softmax() is not part of the 5.x public API any more, so do it here.
+static void top1Of(const cv::Mat& out, int& top1, double& score)
+{
+    cv::Mat flat = out.reshape(1, 1);
+    double mx = 0;
+    cv::Point idx;
+    cv::minMaxLoc(flat, nullptr, &mx, nullptr, &idx);
+
+    const float* p = flat.ptr<float>();
+    double sum = 0;
+    for (int i = 0; i < flat.cols; ++i)
+        sum += std::exp((double)p[i] - mx);
+
+    top1 = idx.x;
+    score = 1.0 / sum;
+}
 
 static cv::Mat makeInput()
 {
@@ -59,13 +77,8 @@ static Result run(const std::string& model, int backend, int target, const char*
 
     Result r;
     r.ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-
-    cv::Mat probs = cv::dnn::softmax(out);
-    cv::Point idx;
-    double mx = 0;
-    cv::minMaxLoc(probs.reshape(1, 1), nullptr, &mx, nullptr, &idx);
-    r.top1 = idx.x;
-    r.score = mx;
+    r.out = out;
+    top1Of(out, r.top1, r.score);
 
     printf("RESULT[%s] ms=%.2f top1=%d score=%.6f out=%dx%dx%dx%d\n",
            tag, r.ms, r.top1, r.score,
@@ -89,8 +102,12 @@ int main(int argc, char** argv)
     Result cpu = run(model, cv::dnn::DNN_BACKEND_OPENCV, cv::dnn::DNN_TARGET_CPU, "CPU");
     Result npu = run(model, cv::dnn::DNN_BACKEND_CANN, cv::dnn::DNN_TARGET_NPU, "CANN_NPU");
 
-    printf("SUMMARY cpu_ms=%.2f cann_ms=%.2f cpu_top1=%d cann_top1=%d score_delta=%.6f\n",
-           cpu.ms, npu.ms, cpu.top1, npu.top1, std::fabs(cpu.score - npu.score));
+    double maxdiff = -1;
+    if (!cpu.out.empty() && !npu.out.empty() && cpu.out.size == npu.out.size && cpu.out.type() == npu.out.type())
+        maxdiff = cv::norm(cpu.out, npu.out, cv::NORM_INF);
+
+    printf("SUMMARY cpu_ms=%.2f cann_ms=%.2f cpu_top1=%d cann_top1=%d score_delta=%.6f max_abs_diff=%.6g\n",
+           cpu.ms, npu.ms, cpu.top1, npu.top1, std::fabs(cpu.score - npu.score), maxdiff);
     fflush(stdout);
 
     const bool same = (cpu.top1 == npu.top1) && (std::fabs(cpu.score - npu.score) < 1e-3);
